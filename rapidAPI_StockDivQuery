@@ -1,0 +1,23 @@
+let
+    Source = (StockSymbol as text)=>
+    let
+        Source = Json.Document(Web.Contents("https://yahoo-finance166.p.rapidapi.com", 
+            [   
+              RelativePath="/api/stock/get-price",
+              Query=[symbol=StockSymbol],
+              Headers=[Accept="application/json", #"x-rapidapi-key"="xxxx",#"x-rapidapi-host"="yahoo-finance166.p.rapidapi.com"]
+            ])
+        ),
+        #"Converted to table" = Record.ToTable(Source),
+        #"Expanded Value" = Table.ExpandRecordColumn(#"Converted to table", "Value", {"result"}, {"result"}),
+        #"Expanded result" = Table.ExpandListColumn(#"Expanded Value", "result"),
+        #"Expanded result 1" = Table.ExpandRecordColumn(#"Expanded result", "result", {"price"}, {"price"}),
+        #"Expanded price" = Table.ExpandRecordColumn(#"Expanded result 1", "price", {"postMarketPrice", "regularMarketPrice", "quoteType", "longName", "currency"}, {"postMarketPrice", "regularMarketPrice", "quoteType", "longName", "currency"}),
+        #"Expanded postMarketPrice" = Table.ExpandRecordColumn(#"Expanded price", "postMarketPrice", {"raw"}, {"raw"}),
+        #"Renamed columns" = Table.RenameColumns(#"Expanded postMarketPrice", {{"raw", "postMarketPrice"}}),
+        #"Expanded regularMarketPrice" = Table.ExpandRecordColumn(#"Renamed columns", "regularMarketPrice", {"raw"}, {"raw"}),
+        #"Renamed columns 1" = Table.RenameColumns(#"Expanded regularMarketPrice", {{"raw", "regularMarketPrice"}})
+    in
+        #"Renamed columns 1"
+in
+    Source
